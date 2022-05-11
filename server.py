@@ -9,6 +9,12 @@ import shutil
 
 server = Flask(__name__)
 
+def is_empty(dato):
+    if dato:
+        return False
+    else:
+        return True
+
 def createNewConnection(name, SSID, password):
     config = """<?xml version=\"1.0\"?>
 <WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">
@@ -149,6 +155,9 @@ def camara():
 @server.route('/busc_youtube',methods=['GET'])
 def busc_youtube():
 	video = request.args.get('nom')
+	if(is_empty(video)):
+		output="No se llenó el rubro solicitado. Favor de introducir la información solicitada."
+		return html('<div class="message"><p> '+output+' </p><i class="message-close-btn">&times;</i></div>')
 	rep.playonyt(video)
 	output="El video " +video +" está siendo reproducido."
 	return html('<div class="message"><p> '+output+' </p><i class="message-close-btn">&times;</i></div>')
@@ -156,6 +165,22 @@ def busc_youtube():
 @server.route('/libros_desc')
 def libros_desc():
 	return render_template('libros.html')
+
+@server.route('/netflix')
+def netflix():
+	return render_template('netflix.html')
+
+@server.route('/busc_netflix',methods=['GET'])
+def busc_netflix():
+	cuenta = request.args.get('cuenta_netflix')
+	contra = request.args.get('contra_netflix')
+	peli= request.args.get('peli_netflix')
+	if(is_empty(peli)):
+		output="No se llenó el rubro solicitado. Favor de introducir la información solicitada."
+		return html('<div class="message"><p> '+output+' </p><i class="message-close-btn">&times;</i></div>')
+	
+	output="La película " +str(peli) +" está siendo reproducida."
+	return html('<div class="message"><p> '+output+' </p><i class="message-close-btn">&times;</i></div>')
 
 @server.route('/tomar_fotos',methods=['GET'])
 def tomar_fotos():
@@ -212,10 +237,14 @@ def contr():
 def conect():
 	name = request.args.get('nom_red')
 	password = request.args.get('contra_red')
+	if(is_empty(name) or is_empty(password)):
+		output="No se llenó el rubro solicitado. Favor de introducir la información solicitada."
+		return html('<div class="message"><p> '+output+' </p><i class="message-close-btn">&times;</i></div>')
+
 	createNewConnection(name, name, password)
 	connect(name, name)
 
-	output="Ya se ha hecho la conexión con "+name+ "cuyo password introducido fue "+password+". Si aún no te has podido conectar verifica nuevamente tu contraseña. "
+	output="Ya se ha hecho la conexión con "+name+ " cuyo password introducido fue "+password+". Si aún no te has podido conectar verifica nuevamente tu contraseña. "
 	return html('<div class="message"><p> '+output+' </p><i class="message-close-btn">&times;</i></div>')
 
 @server.route('/funcionalidades')
