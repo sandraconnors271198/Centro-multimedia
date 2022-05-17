@@ -6,6 +6,11 @@ import numpy as np
 import os
 import sys
 import shutil
+from spotipy.oauth2 import SpotifyClientCredentials
+import spotipy
+import webbrowser as web
+client_id='452f261bc9294074a5e903e660097890'
+client_secret = '08a43171753b48fc97c5725d435a7ab4'
 
 server = Flask(__name__)
 
@@ -77,6 +82,13 @@ def you():
    today = datetime.datetime.now()
    print("Bienvenido al servidor. Fecha actual: "+str(today))
    return render_template('youtube.html')
+
+@server.route('/spoti')
+def spoti():
+   today = datetime.datetime.now()
+   print("Bienvenido al servidor. Fecha actual: "+str(today))
+   return render_template('spotify.html')
+
 
 @server.route('/yo_robot')
 def yo_robot():
@@ -160,6 +172,19 @@ def busc_youtube():
 		return html('<div class="message"><p> '+output+' </p><i class="message-close-btn">&times;</i></div>')
 	rep.playonyt(video)
 	output="El video " +video +" está siendo reproducido."
+	return html('<div class="message"><p> '+output+' </p><i class="message-close-btn">&times;</i></div>')
+
+@server.route('/busc_spotify',methods=['GET'])
+def busc_spotify():
+	cancion = request.args.get('nom')
+	if(is_empty(cancion)):
+		output="No se llenó el rubro solicitado. Favor de introducir la información solicitada."
+		return html('<div class="message"><p> '+output+' </p><i class="message-close-btn">&times;</i></div>')
+	sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials(client_id,client_secret))
+	result = sp.search(cancion)
+	for i in range(0, len(result["tracks"]["items"])):
+          web.open(result["tracks"]["items"][i]["external_urls"]["spotify"])
+	output="Se abrieron las mejores coincidencias con la canción " +cancion +" en spotify."
 	return html('<div class="message"><p> '+output+' </p><i class="message-close-btn">&times;</i></div>')
 
 @server.route('/libros_desc')
