@@ -219,18 +219,64 @@ def show_image(path_image, root, path_usb):
 	button_stop = tkinter.Button(window, text = "Escoger otro archivo", width = 30, command = lambda: relaunch(window, path_usb))
 	button_stop.pack()
 	window.mainloop()
-	
+
+#Global variable 
+index = None
+
+
+def change_index(window, image_duration ,len_list, image_prepared, path_usb, image_files):
+	global index
+	if index >= len_list - 1:
+		index = 0
+	else:
+		index = index + 1
+		#print(index)
+	path_image = path_usb + image_files[index]
+	size_max_width = 750
+	size_max_height = 750
+	image_unprepared = Image.open(path_image)
+	size = image_unprepared.size
+	if size[0] > size_max_width:
+		image_unprepared = image_unprepared.resize((size_max_width, math.floor((size_max_width/size[0])*size[1])))
+		size = image_unprepared.size
+	if size[1] > size_max_height:
+		image_unprepared = image_unprepared.resize((math.floor((size_max_height/size[1])*size[0]), size_max_height))
+	window.image_unprepared = ImageTk.PhotoImage(image_unprepared)
+	image_prepared.config(image = window.image_unprepared)
+	window.after(image_duration*1000, change_index, window, image_duration, len(image_files), image_prepared, path_usb, image_files)
+
 def show_images(path_usb, root):
+	global index
+	index = 0
+	image_duration = 1
 	root.destroy()
+	#aux_window = tkinter.Tk() #To adapt to parameters of show_image
 	files = get_files_name(path_usb)
 	image_files = []
+	# Save the names of images in a list
 	for image in files:
 		if (image[-4:] == ".png") or (image[-4:] == ".jpg") or (image[-5:] == ".jpeg"):
-			image_files.append(imagen)
+			image_files.append(image)
 			
-	for image in image_files:
-		show_image(path_usb + image)
-		time.sleep(10)
+	#Show all the images in certain time interval
+	path_image = path_usb + image_files[index]
+	size_max_width = 750
+	size_max_height = 750
+	window = tkinter.Tk()
+	window.attributes("-zoomed", True)
+	window.title("Mostrando imágenes ")
+	image_unprepared = Image.open(path_image)
+	size = image_unprepared.size
+	if size[0] > size_max_width:
+		image_unprepared = image_unprepared.resize((size_max_width, math.floor((size_max_width/size[0])*size[1])))
+		size = image_unprepared.size
+	if size[1] > size_max_height:
+		image_unprepared = image_unprepared.resize((math.floor((size_max_height/size[1])*size[0]), size_max_height))
+	window.image_unprepared = ImageTk.PhotoImage(image_unprepared)
+	image_prepared = tkinter.Label(window, image = window.image_unprepared)
+	image_prepared.pack()
+	window.after(image_duration*1000, change_index, window, image_duration, len(image_files), image_prepared, path_usb, image_files)
+	window.mainloop()
 	
 	
 def choose_multimedia(path_usb, root):
@@ -333,7 +379,7 @@ def interface_usb(path_usb, usb_connected):
 	elif action == "photo":
 		label1 = tkinter.Label(root, text = "Reproduciendo imágenes")
 		label1.pack()
-		show_photos()
+		show_images(path_usb, root)
 	else:
 		label1 = tkinter.Label(root, text = "No se detectó algún archivo multimedia en la USB")
 		label1.pack()
@@ -341,7 +387,7 @@ def interface_usb(path_usb, usb_connected):
 	root.mainloop()
 	
 def relaunch(root, path_usb):
-	print(path_usb + "re")
+	#print(path_usb + "re")
 	root.destroy()
 	interface_usb(path_usb, True)	
 	
@@ -361,7 +407,7 @@ def start_usb_function():
 		root.title("Escoja la USB desde donde se reproducirá la multimedia")
 		for i in range(0, len(list_usb)):
 			tkinter.Button(root, text = list_usb[i], width = 30, command = lambda i=i: relaunch(root, pre_path_usb + list_usb[i] + "/")).pack()
-			print(pre_path_usb + list_usb[i] + "/")
+			#print(pre_path_usb + list_usb[i] + "/")
 		root.mainloop()
 	else:
 		root = tkinter.Tk()
