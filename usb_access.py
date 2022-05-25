@@ -129,14 +129,29 @@ def play_multimedia(path_multimedia, root, path_usb):
 		raise RuntimeError('Fallo al reproducir multimedia')
 
 def play_music(path_usb, root):
+	root.destroy()
+	playing = tkinter.Tk()
+	playing.title("Reproduciendo audio en bucle infinito")
+	playing.geometry("500x100")
 	files = get_files_name(path_usb)
 	audio_files = []
 	for arch in files:
 		if arch[-4:] == ".mp3":
 			audio_files.append(arch)
-			
-	for audio in audio_files:
-		play_multimedia(path_usb + audio)
+
+	while True:	
+		for audio in audio_files:
+			player = vlc.MediaPlayer(path_usb + audio)
+			"""
+			button_stop = tkinter.Button(playing, text = "Escoger otro archivo", width = 30, command = lambda: stop(player, playing, path_usb))
+			button_stop.pack()
+			#playing.protocol("WM_DELETE_WINDOW", stop(player, playing, path_usb))	"""
+			player.play()
+			time.sleep(0.1)
+			duration = player.get_length()
+			time.sleep(duration/1000 + 1)
+			player.stop()
+			#button_stop.destroy()
 	"""	
 	label_playing = tkinter.Label(root, text = "Iniciando reproducción")
 	label_playing.pack()
@@ -187,17 +202,41 @@ def play_videos(path_usb, root):
 				label_video = tkinter.Label(root, text = "Error al reproducir el video, intente nuevamente por favor.")
 				label_video.pack()
 		"""
-def play_video(path_video, root):
+def video_mode(path_usb, root):
 	root.destroy()
-	playing = tkinter.Tk()
-	playing.title("Reproduciendo " + path_multimedia)
-	playing.geometry("500x100")
+	video_mode = tkinter.Tk()
+	video_mode.title("Elegir modo de video")
+	video_mode.geometry("500x100")
+	button1 = tkinter.Button(video_mode, text = "Reproducir videos uno tras otro", width = 30, command = lambda: play_videos(video_mode, path_usb))
+	button1.pack()
+	button2 = tkinter.Button(video_mode, text = "Seleccionar un video", width = 30, command = lambda: play_video(video_mode, path_usb))
+	button2.pack()
 	
-	try:
-		player = vlc.MediaPlayer(path_multimedia)
-		player.play()
-	except:
-		pass
+
+def play_video(root, path_usb):
+	root.destroy()
+	window = tkinter.Tk()
+	window.title("Elegir video")
+	window.geometry("500x100")
+	label_select = tkinter.Label(window, text = "No se ha seleccionado un archivo multimedia")
+	label_select.pack()
+	path_multimedia = filedialog.askopenfilename(initialdir = path_usb, filetypes = [
+		("all video format", ".mp4"),
+		("all video format", ".avi")])
+	
+	if len(path_multimedia) > 0:
+		if (path_multimedia[-4:] == ".mp4") or (path_multimedia[-4] == ".avi"):
+			play_multimedia(path_multimedia, window, path_usb)
+	
+def play_videos(root, path_usb):
+	files = get_files_name(path_usb)
+	video_files = []
+	# Save the names of videos in a list
+	for arch in files:
+		if (arch[-4:] == ".mp4") or (arch[-4:] == ".avi"):
+			video_files.append(arch)
+	for video in video_files:
+		play_multimedia(path_usb + video, root, path_usb)
 
 def show_image(path_image, root, path_usb):
 	size_max_width = 750
@@ -250,7 +289,6 @@ def show_images(path_usb, root):
 	index = 0
 	image_duration = 1
 	root.destroy()
-	#aux_window = tkinter.Tk() #To adapt to parameters of show_image
 	files = get_files_name(path_usb)
 	image_files = []
 	# Save the names of images in a list
@@ -375,7 +413,7 @@ def interface_usb(path_usb, usb_connected):
 	elif action == "video":
 		label1 = tkinter.Label(root, text = "Reproduciendo video")
 		label1.pack()
-		play_videos()
+		video_mode(path_usb, root)
 	elif action == "photo":
 		label1 = tkinter.Label(root, text = "Reproduciendo imágenes")
 		label1.pack()
