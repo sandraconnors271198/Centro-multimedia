@@ -26,65 +26,7 @@ import math
 
 x11 = ctypes.cdll.LoadLibrary('libX11.so')
 x11.XInitThreads()
-"""
-def play_music(path_usb):
-	usb_files = get_files_name(path_usb)
-	for arch in usb_files:
-		if (arch[-4:]=='.mp3'):
-			try:
-				media = vlc.MediaPlayer(path_usb + "/" + arch)
-				media.play()
-				time.sleep(0.1)
-				duration = player.get_length()
-				time.sleep(duration)
-			except:
-				raise RuntimeError('Failed to play the music')
 
-def play_videos(vid_mod_presentation, path_usb):
-	for arch in files_usb:
-		if (arch[-4:]=='.mp4') or (arch[-5:]=='.mpeg') or (arch[-4]=='.3gp'):
-			try:
-				#instancia = vlc.Instance()
-				#reproductor = instancia.media_player_new()
-				#multimedia = instancia.media_new(ruta + "/" + archivo)
-				#reproductor.set_media(multimedia)
-				#reproductor.play()
-				#Se mantiene la reproducción del video
-				#while reproductor.get_state() != vlc.State.Ended:
-				#	time.sleep(1)
-				media=vlc.MediaPlayer(path_usb + "/" + arch)
-				media.play()
-				while media.get_state() != vlc.State.Ended:
-					time.sleep(1)
-			except:
-				raise RuntimeError('Failed to play the videos')
-
-def show_photos(path_usb):
-	for arch in files_usb:
-		if (arch[-4:]=='.png'): #or (archivo[-4:]=='.jpg'):
-			try:
-				media = vlc.MediaPlayer(path_usb + "/" + arch)
-				media.play()
-			except:
-				raise RuntimeError('Failed to show the photos')
-
-def get_files_name(path_usb):
-	#Se revisa el contenido de la memoria
-	try:
-		#Se espera una sola memoria USB conectada a un puerto
-		#Se obtienen los nombres sólo de los archivos
-		names_usb_files = [arch for arch in os.listdir(path_usb) if os.path.isfile(os.path.join(path_usb, arch))]
-		usb_conected = True
-	except FileNotFoundError:
-		raise RuntimeError('Failed to open USB and know its files')
-	except:
-		raise RuntimeError('Failed to open USB')
-	
-	return names_usb_files
-
-#Según el contenido de la memoria se activa determinado funcionamiento del centro multimedia
-		 
-"""
 def play(player, root, button):
 	player.play()
 	button.destroy()
@@ -110,10 +52,7 @@ def play_multimedia(path_multimedia, root, path_usb):
 	try:
 		player = vlc.MediaPlayer(path_multimedia)
 		player.play()
-		"""
-		label_playing = tkinter.Label(root, text = "Reproduciendo " + path_multimedias)
-		label_playing.pack()
-		"""
+		
 		button_stop = tkinter.Button(playing, text = "Escoger otro archivo", width = 30, command = lambda: stop(player, playing, path_usb))
 		button_stop.pack()
 		
@@ -130,78 +69,33 @@ def play_multimedia(path_multimedia, root, path_usb):
 
 def play_music(path_usb, root):
 	root.destroy()
-	playing = tkinter.Tk()
-	playing.title("Reproduciendo audio en bucle infinito")
-	playing.geometry("500x100")
+	#Window to close the bucle when is closed
+	aux_window = tkinter.Tk()
+	aux_window.title("Detener reproducción de audios")
+	label = tkinter.Label(aux_window, text = "Cierre esta ventana para detener el bucle")
+	label.pack()
+	#Find the names of the files in the USB
 	files = get_files_name(path_usb)
 	audio_files = []
+	# Save only the names the audios in a list
 	for arch in files:
-		if arch[-4:] == ".mp3":
+		if (arch[-4:] == ".mp3"):
 			audio_files.append(arch)
-
-	while True:	
-		for audio in audio_files:
-			player = vlc.MediaPlayer(path_usb + audio)
-			"""
-			button_stop = tkinter.Button(playing, text = "Escoger otro archivo", width = 30, command = lambda: stop(player, playing, path_usb))
-			button_stop.pack()
-			#playing.protocol("WM_DELETE_WINDOW", stop(player, playing, path_usb))	"""
-			player.play()
-			time.sleep(0.1)
-			duration = player.get_length()
-			time.sleep(duration/1000 + 1)
-			player.stop()
-			#button_stop.destroy()
-	"""	
-	label_playing = tkinter.Label(root, text = "Iniciando reproducción")
-	label_playing.pack()
-				
+	#Make the required objects to play the media in VLC
+	media_player = vlc.MediaListPlayer()
+	player = vlc.Instance()
+	#Collect the audios in a VLC media list 
+	media_list = player.media_list_new()
 	for audio in audio_files:
-		try:
-			player = vlc.MediaPlayer(path_usb + audio)
-			#playing.protocol("WM_DELETE_WINDOW", stop(player, playing))
-				
-			player.play()
-			time.sleep(5)
-			time.sleep((player.get_length()/1000)-4)
-			#duration = player.get_length()
-			#time.sleep(duration/1000)
-			player.stop()
-			#duration = player.get_length()
+		media = player.media_new(path_usb + audio)
+		media_list.add_media(media)
+	#Play the list in a bucle	
+	media_player.set_media_list(media_list)	
+	media_player.set_playback_mode(vlc.PlaybackMode.loop)
+	media_player.play()
+	
+	aux_window.mainloop()
 			
-			#while player.is_playing():
-			#	time.sleep(duration)
-		except:
-			continue
-	if n > 1:
-		button_stop = tkinter.Button(playing, text = "Volver al menú anterior", width = 30, command = lambda: stop(player, root))
-		button_stop.pack()
-			#button_stop.destroy()
-		
-		
-		button_pause = tkinter.Button(playing, text = "Pausar", width = 30, command = lambda: pause(player, root, button_pause))
-		button_pause.pack()
-		
-		label_playing.configure(text = "Reproduciendo " + audio)
-			
-
-def play_videos(path_usb, root):
-	label_select = tkinter.Label(root, text = "No se ha seleccionado un video")
-	label_select.pack()
-	path_video = filedialog.askopenfilename(filetypes = [
-		("all video format", ".mp4"),
-		("all video format", ".avi")])
-		
-	if len(path_video) > 0:
-		label_select.configure(text = path_video)
-		if (path_video[-4:] == ".mp4") or (path_video[-4] == ".avi"):
-			try:
-				player = vlc.MediaPlayer(path_video)
-				player.play()	 
-			except:
-				label_video = tkinter.Label(root, text = "Error al reproducir el video, intente nuevamente por favor.")
-				label_video.pack()
-		"""
 def video_mode(path_usb, root):
 	root.destroy()
 	video_mode = tkinter.Tk()
@@ -229,14 +123,32 @@ def play_video(root, path_usb):
 			play_multimedia(path_multimedia, window, path_usb)
 	
 def play_videos(root, path_usb):
+	root.destroy()
+	#Window to close the bucle when is closed
+	aux_window = tkinter.Tk()
+	aux_window.title("Detener reproducción de videos")
+	label = tkinter.Label(aux_window, text = "Cierre esta ventana para detener el bucle")
+	label.pack()
 	files = get_files_name(path_usb)
 	video_files = []
-	# Save the names of videos in a list
+	# Save only the names of videos in a list
 	for arch in files:
 		if (arch[-4:] == ".mp4") or (arch[-4:] == ".avi"):
 			video_files.append(arch)
+	#Make the required objects to play the media in VLC
+	media_player = vlc.MediaListPlayer()
+	player = vlc.Instance()
+	#Collect the audios in a VLC media list 
+	media_list = player.media_list_new()
 	for video in video_files:
-		play_multimedia(path_usb + video, root, path_usb)
+		media = player.media_new(path_usb + video)
+		media_list.add_media(media)
+	#Play the list in a bucle	
+	media_player.set_media_list(media_list)	
+	media_player.set_playback_mode(vlc.PlaybackMode.loop)
+	media_player.play()
+	
+	aux_window.mainloop()
 
 def show_image(path_image, root, path_usb):
 	size_max_width = 750
@@ -421,6 +333,8 @@ def interface_usb(path_usb, usb_connected):
 	else:
 		label1 = tkinter.Label(root, text = "No se detectó algún archivo multimedia en la USB")
 		label1.pack()
+		label2 = tkinter.Label(root, text = "Formatos válidos \n Imágenes: jpg, jpeg y png \n Videos: avi y mp4 \n Audio: mp3")
+		label2.pack()
 		
 	root.mainloop()
 	
