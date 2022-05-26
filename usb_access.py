@@ -58,14 +58,16 @@ def play_multimedia(path_multimedia, root, path_usb):
 		
 		button_pause = tkinter.Button(playing, text = "Pausar", width = 30, command = lambda: pause(player, playing, button_pause))
 		button_pause.pack()
-		
-		
-		if player.get_state() == vlc.State.Ended:
-			button_end = tkinter.Button(playing, text = "Escoger otro archivo", width = 30, command = lambda: relaunch(playing, path_multimedia))
 	except: 
 		label_error = tkinter.Label(root, text = "Error al reproducir el video, intente nuevamente por favor.")
 		label_error.pack()
 		raise RuntimeError('Fallo al reproducir multimedia')
+	#When the multimedia ends the window is closed and the interfaz
+	#is relaunched
+	time.sleep(1)
+	duration_multimedia = player.get_length() + 1000
+	playing.after(duration_multimedia, stop, player, playing, path_usb)
+	playing.mainloop()
 
 def play_music(path_usb, root):
 	root.destroy()
